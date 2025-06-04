@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Speed Tap Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff6b6b 0%, #4ecdc4 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            color: #2d3748;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .level-info {
+            font-weight: bold;
+            color: #2d3748;
+            font-size: 16px;
+        }
+
+        .mode-toggle {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .mode-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: bold;
+        }
+
+        .timer-bar {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.1s linear;
+            border-radius: 4px;
+        }
+
+        .game-board {
+            display: grid;
+            gap: 4px;
+            margin: 20px auto;
+            padding: 15px;
+            background: linear-gradient(145deg, #f7fafc, #e2e8f0);
+            border-radius: 15px;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.1);
+            touch-action: manipulation;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: 3px solid #cbd5e0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #f7fafc;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cell.target-green {
+            background: linear-gradient(145deg, #48bb78, #38a169);
+            color: white;
+            border-color: #2f855a;
+            animation: pulse-green 0.8s infinite;
+        }
+
+        .cell.target-red {
+            background: linear-gradient(145deg, #f56565, #e53e3e);
+            color: white;
+            border-color: #c53030;
+            animation: pulse-red 0.8s infinite;
+        }
+
+        .cell.tapped-correct {
+            background: linear-gradient(145deg, #9ae6b4, #68d391);
+            transform: scale(0.9);
+            animation: success-pop 0.3s ease;
+        }
+
+        .cell.tapped-wrong {
+            background: linear-gradient(145deg, #feb2b2, #fc8181);
+            animation: error-shake 0.5s ease;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 101, 101, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(245, 101, 101, 0); }
+        }
+
+        @keyframes success-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(0.9); }
+        }
+
+        @keyframes error-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #a0aec0, #718096);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .message {
+            text-align: center;
+            font-weight: bold;
+            margin: 15px 0;
+            padding: 10px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            transform: translateY(-10px);
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message.success {
+            color: #2f855a;
+            background: rgba(72, 187, 120, 0.1);
+            border: 2px solid rgba(72, 187, 120, 0.3);
+        }
+
+        .message.failure {
+            color: #c53030;
+            background: rgba(245, 101, 101, 0.1);
+            border: 2px solid rgba(245, 101, 101, 0.3);
+        }
+
+        .instructions {
+            font-size: 12px;
+            color: #718096;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        .game-status {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 15px;
+            }
+
+            .title {
+                font-size: 20px;
+            }
+
+            .cell {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="header">
+        <h1 class="title">⚡ Speed Tap Challenge</h1>
+        <div class="controls">
+            <div class="level-info">Level <span id="current-level">1</span></div>
+            <button class="mode-toggle" id="mode-toggle">Regular Mode</button>
+        </div>
+    </div>
+
+    <div class="game-stats">
+        <div>Score: <span id="score">0</span></div>
+        <div>Round: <span id="round">0</span>/5</div>
+    </div>
+
+    <div class="timer-bar">
+        <div class="timer-fill" id="timer-fill"></div>
+    </div>
+
+    <div class="game-status" id="game-status">Tap START to begin!</div>
+
+    <div class="game-board" id="game-board"></div>
+
+    <div class="message" id="message"></div>
+
+    <div class="buttons">
+        <button class="btn btn-primary" id="start-btn">START</button>
+        <button class="btn btn-secondary" id="reset-btn">Reset</button>
+        <button class="btn btn-primary" id="next-level-btn" style="display: none;">Next Level</button>
+        <button class="btn btn-danger" id="prev-level-btn">Prev Level</button>
+    </div>
+
+    <div class="instructions">
+        Tap the GREEN cells quickly! Avoid RED cells in Regular Mode. Complete 5 rounds to advance!
+    </div>
+</div>
+
+<script>
+    class SpeedTapGame {
+        constructor() {
+            this.currentLevel = 1;
+            this.isRegularMode = true;
+            this.gameState = {
+                isPlaying: false,
+                score: 0,
+                round: 0,
+                maxRounds: 5,
+                targetCells: [],
+                redCells: [],
+                timeLeft: 0,
+                maxTime: 3000, // 3 seconds
+                timer: null,
+                timerInterval: null
+            };
+
+            this.levelConfig = [
+                { size: 4, targets: 2, reds: 1, time: 2000 },
+                { size: 5, targets: 3, reds: 2, time: 1500 },
+                { size: 6, targets: 4, reds: 3, time: 1000 }
+            ];
+
+            this.initEventListeners();
+            this.initGame();
+        }
+
+        initEventListeners() {
+            document.getElementById('mode-toggle').addEventListener('click', () => {
+                this.isRegularMode = !this.isRegularMode;
+                document.getElementById('mode-toggle').textContent =
+                    this.isRegularMode ? 'Regular Mode' : 'Simplified Mode';
+                this.initGame();
+            });
+
+            document.getElementById('start-btn').addEventListener('click', () => {
+                this.startGame();
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', () => {
+                this.initGame();
+            });
+
+            document.getElementById('next-level-btn').addEventListener('click', () => {
+                if (this.currentLevel < this.levelConfig.length) {
+                    this.currentLevel++;
+                    this.initGame();
+                }
+            });
+
+            document.getElementById('prev-level-btn').addEventListener('click', () => {
+                if (this.currentLevel > 1) {
+                    this.currentLevel--;
+                    this.initGame();
+                }
+            });
+        }
+
+        initGame() {
+            this.gameState = {
+                isPlaying: false,
+                score: 0,
+                round: 0,
+                maxRounds: 5,
+                targetCells: [],
+                redCells: [],
+                timeLeft: 0,
+                maxTime: 3000, // 3 seconds
+                timer: null,
+                timerInterval: null
+            };
+
+            this.updateDisplay();
+            this.renderBoard();
+            this.hideMessage();
+
+            document.getElementById('current-level').textContent = this.currentLevel;
+            document.getElementById('game-status').textContent = 'Tap START to begin!';
+            document.getElementById('start-btn').style.display = 'inline-block';
+            document.getElementById('next-level-btn').style.display = 'none';
+        }
+
+        renderBoard() {
+            const board = document.getElementById('game-board');
+            const config = this.levelConfig[this.currentLevel - 1];
+
+            board.innerHTML = '';
+            board.style.gridTemplateColumns = `repeat(${config.size}, 1fr)`;
+
+            for (let i = 0; i < config.size * config.size; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.index = i;
+                cell.addEventListener('click', () => this.handleCellClick(i));
+                board.appendChild(cell);
+            }
+        }
+
+        startGame() {
+            if (this.gameState.isPlaying) return;
+
+            this.gameState.isPlaying = true;
+            this.gameState.round = 0;
+            this.gameState.score = 0;
+
+            document.getElementById('start-btn').style.display = 'none';
+            this.nextRound();
+        }
+
+        nextRound() {
+            if (this.gameState.round >= this.gameState.maxRounds) {
+                this.completeLevel();
+                return;
+            }
+
+            this.gameState.round++;
+            this.clearBoard();
+            this.generateTargets();
+            this.startRoundTimer();
+
+            document.getElementById('game-status').textContent =
+                `Round ${this.gameState.round} - Tap the GREEN cells!`;
+            this.updateDisplay();
+        }
+
+        generateTargets() {
+            const config = this.levelConfig[this.currentLevel - 1];
+            const totalCells = config.size * config.size;
+            const availableIndices = Array.from({length: totalCells}, (_, i) => i);
+
+            // Shuffle array
+            for (let i = availableIndices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [availableIndices[i], availableIndices[j]] = [availableIndices[j], availableIndices[i]];
+            }
+
+            // Select target cells (green)
+            this.gameState.targetCells = availableIndices.slice(0, config.targets);
+
+            // Select red cells (only in regular mode)
+            this.gameState.redCells = [];
+            if (this.isRegularMode) {
+                this.gameState.redCells = availableIndices.slice(config.targets, config.targets + config.reds);
+            }
+
+            this.renderTargets();
+        }
+
+        renderTargets() {
+            const cells = document.querySelectorAll('.cell');
+
+            cells.forEach((cell, index) => {
+                cell.className = 'cell';
+                cell.textContent = '';
+
+                if (this.gameState.targetCells.includes(index)) {
+                    cell.classList.add('target-green');
+                    cell.textContent = '✓';
+                } else if (this.gameState.redCells.includes(index)) {
+                    cell.classList.add('target-red');
+                    cell.textContent = '✗';
+                }
+            });
+        }
+
+        startRoundTimer() {
+            const config = this.levelConfig[this.currentLevel - 1];
+            this.gameState.timeLeft = config.time;
+            this.gameState.maxTime = config.time;
+
+            this.updateTimerBar();
+
+            this.gameState.timerInterval = setInterval(() => {
+                this.gameState.timeLeft -= 100;
+                this.updateTimerBar();
+
+                if (this.gameState.timeLeft <= 0) {
+                    this.timeOut();
+                }
+            }, 100);
+        }
+
+        updateTimerBar() {
+            const fill = document.getElementById('timer-fill');
+            const percentage = (this.gameState.timeLeft / this.gameState.maxTime) * 100;
+            fill.style.width = percentage + '%';
+
+            if (percentage < 30) {
+                fill.style.background = 'linear-gradient(90deg, #f56565, #e53e3e)';
+            } else if (percentage < 60) {
+                fill.style.background = 'linear-gradient(90deg, #ed8936, #dd6b20)';
+            } else {
+                fill.style.background = 'linear-gradient(90deg, #48bb78, #38a169)';
+            }
+        }
+
+        handleCellClick(index) {
+            if (!this.gameState.isPlaying) return;
+
+            const cell = document.querySelectorAll('.cell')[index];
+
+            if (this.gameState.targetCells.includes(index)) {
+                // Correct tap
+                cell.classList.add('tapped-correct');
+                this.gameState.targetCells = this.gameState.targetCells.filter(i => i !== index);
+                this.gameState.score += 10;
+
+                if (this.gameState.targetCells.length === 0) {
+                    // All targets tapped
+                    this.roundComplete();
+                }
+            } else if (this.gameState.redCells.includes(index)) {
+                // Wrong tap on red cell
+                cell.classList.add('tapped-wrong');
+                this.gameOver('Oops! You tapped a RED cell!');
+            }
+        }
+
+        roundComplete() {
+            clearInterval(this.gameState.timerInterval);
+            this.gameState.score += Math.floor(this.gameState.timeLeft / 100); // Bonus points for time left
+
+            setTimeout(() => {
+                this.nextRound();
+            }, 1000);
+        }
+
+        timeOut() {
+            clearInterval(this.gameState.timerInterval);
+            this.gameOver('Time\'s up! Too slow!');
+        }
+
+        gameOver(message) {
+            this.gameState.isPlaying = false;
+            clearInterval(this.gameState.timerInterval);
+
+            document.getElementById('game-status').textContent = 'Game Over!';
+            this.showMessage(message, 'failure');
+            document.getElementById('start-btn').style.display = 'inline-block';
+
+            this.clearBoard();
+        }
+
+        completeLevel() {
+            this.gameState.isPlaying = false;
+            clearInterval(this.gameState.timerInterval);
+
+            document.getElementById('game-status').textContent = 'Level Complete! 🎉';
+            this.showMessage(`Amazing! You scored ${this.gameState.score} points!`, 'success');
+
+            if (this.currentLevel < this.levelConfig.length) {
+                document.getElementById('next-level-btn').style.display = 'inline-block';
+            } else {
+                this.showMessage('🏆 Congratulations! You completed all levels!', 'success');
+            }
+
+            this.clearBoard();
+        }
+
+        clearBoard() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.className = 'cell';
+                cell.textContent = '';
+            });
+        }
+
+        updateDisplay() {
+            document.getElementById('score').textContent = this.gameState.score;
+            document.getElementById('round').textContent = this.gameState.round;
+        }
+
+        showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message ${type} show`;
+        }
+
+        hideMessage() {
+            const message = document.getElementById('message');
+            message.className = 'message';
+        }
+    }
+
+    // Initialize the game when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        new SpeedTapGame();
+    });
+
+    // Prevent zoom on mobile devices
+    document.addEventListener('touchstart', function(event) {
+        if (event.touches.length > 1) {
+            event.preventDefault();
+        }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+</script>
+</body>
+</html>
