@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano Puzzle Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            color: white;
+        }
+
+        .game-container {
+            max-width: 100%;
+            width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .level-info {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-play {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .btn-record {
+            background: linear-gradient(45deg, #f44336, #e91e63);
+            color: white;
+        }
+
+        .btn-submit {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .piano {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            overflow-x: auto;
+        }
+
+        .piano-key {
+            position: relative;
+            width: 40px;
+            height: 120px;
+            margin: 0 1px;
+            border: 2px solid #333;
+            border-radius: 0 0 8px 8px;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 10px;
+            font-size: 0.8em;
+            font-weight: bold;
+            user-select: none;
+        }
+
+        .piano-key.white {
+            background: linear-gradient(to bottom, #fff, #f0f0f0);
+            color: #333;
+        }
+
+        .piano-key.black {
+            background: linear-gradient(to bottom, #333, #111);
+            color: white;
+            height: 80px;
+            width: 25px;
+            margin: 0 -12.5px;
+            z-index: 2;
+            border-radius: 0 0 4px 4px;
+        }
+
+        .piano-key:active,
+        .piano-key.playing {
+            transform: scale(0.95);
+        }
+
+        .piano-key.white:active,
+        .piano-key.white.playing {
+            background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+        }
+
+        .piano-key.black:active,
+        .piano-key.black.playing {
+            background: linear-gradient(to bottom, #555, #333);
+        }
+
+        .piano-key.highlight {
+            animation: highlight 0.5s ease;
+        }
+
+        @keyframes highlight {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255, 255, 0, 0.8); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .modal p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.1em;
+            min-height: 1.5em;
+        }
+
+        .recording {
+            color: #ff4444;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .settings {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .settings-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 200px;
+            color: #333;
+        }
+
+        .settings-panel label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .piano-key {
+                width: 35px;
+                height: 100px;
+            }
+
+            .piano-key.black {
+                width: 22px;
+                height: 70px;
+                margin: 0 -11px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .controls {
+                gap: 5px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="settings">
+    <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    <div class="settings-panel" id="settingsPanel">
+        <label>
+            <input type="checkbox" id="simplificationMode" onchange="toggleSimplification()">
+            Show playing notes
+        </label>
+    </div>
+</div>
+
+<div class="game-container">
+    <div class="header">
+        <h1 class="title">🎹 Piano Puzzle</h1>
+        <div class="level-info">Level <span id="currentLevel">1</span> of 3</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-play" onclick="playMelody()" id="playBtn">🎵 Play Melody</button>
+        <button class="btn btn-record" onclick="toggleRecording()" id="recordBtn">🎤 Record</button>
+        <button class="btn btn-submit" onclick="submitRecording()" id="submitBtn" disabled>✓ Submit</button>
+    </div>
+
+    <div class="status" id="status">Click "Play Melody" to hear the tune!</div>
+
+    <div class="piano" id="piano"></div>
+</div>
+
+<div class="modal" id="successModal">
+    <div class="modal-content">
+        <h2>🎉 Great Job!</h2>
+        <p id="modalMessage">You played the melody perfectly!</p>
+        <button class="btn btn-play" onclick="nextLevel()">Continue</button>
+    </div>
+</div>
+
+<script>
+    // Game configuration
+    const SIMPLIFICATION_MODE = false; // Set to true to enable note highlighting
+
+    // Melodies for each level (note frequencies)
+    const melodies = [
+        // Level 1: Twinkle Twinkle Little Star (first part)
+        [
+            { note: 'C', freq: 261.63, duration: 400 },
+            { note: 'C', freq: 261.63, duration: 400 },
+            { note: 'G', freq: 392.00, duration: 400 },
+            { note: 'G', freq: 392.00, duration: 400 },
+            { note: 'A', freq: 440.00, duration: 400 },
+            { note: 'A', freq: 440.00, duration: 400 },
+            { note: 'G', freq: 392.00, duration: 800 }
+        ],
+        // Level 2: Mary Had a Little Lamb
+        [
+            { note: 'E', freq: 329.63, duration: 400 },
+            { note: 'D', freq: 293.66, duration: 400 },
+            { note: 'C', freq: 261.63, duration: 400 },
+            { note: 'D', freq: 293.66, duration: 400 },
+            { note: 'E', freq: 329.63, duration: 400 },
+            { note: 'E', freq: 329.63, duration: 400 },
+            { note: 'E', freq: 329.63, duration: 800 }
+        ],
+        // Level 3: Happy Birthday (first part)
+        [
+            { note: 'C', freq: 261.63, duration: 300 },
+            { note: 'C', freq: 261.63, duration: 300 },
+            { note: 'D', freq: 293.66, duration: 400 },
+            { note: 'C', freq: 261.63, duration: 400 },
+            { note: 'F', freq: 349.23, duration: 400 },
+            { note: 'E', freq: 329.63, duration: 800 },
+            { note: 'C', freq: 261.63, duration: 300 },
+            { note: 'C', freq: 261.63, duration: 300 },
+            { note: 'D', freq: 293.66, duration: 400 },
+            { note: 'C', freq: 261.63, duration: 400 }
+        ]
+    ];
+
+    // Piano keys configuration
+    const keys = [
+        { note: 'C', freq: 261.63, color: 'white' },
+        { note: 'C#', freq: 277.18, color: 'black' },
+        { note: 'D', freq: 293.66, color: 'white' },
+        { note: 'D#', freq: 311.13, color: 'black' },
+        { note: 'E', freq: 329.63, color: 'white' },
+        { note: 'F', freq: 349.23, color: 'white' },
+        { note: 'F#', freq: 369.99, color: 'black' },
+        { note: 'G', freq: 392.00, color: 'white' },
+        { note: 'G#', freq: 415.30, color: 'black' },
+        { note: 'A', freq: 440.00, color: 'white' },
+        { note: 'A#', freq: 466.16, color: 'black' },
+        { note: 'B', freq: 493.88, color: 'white' }
+    ];
+
+    // Game state
+    let currentLevel = 1;
+    let isRecording = false;
+    let recordedNotes = [];
+    let audioContext;
+    let simplificationEnabled = SIMPLIFICATION_MODE;
+
+    // Initialize the game
+    function init() {
+        createPiano();
+        updateProgress();
+        initAudio();
+        document.getElementById('simplificationMode').checked = simplificationEnabled;
+    }
+
+    // Initialize Web Audio API
+    function initAudio() {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // Create piano keys
+    function createPiano() {
+        const piano = document.getElementById('piano');
+        piano.innerHTML = '';
+
+        keys.forEach((key, index) => {
+            const keyElement = document.createElement('div');
+            keyElement.className = `piano-key ${key.color}`;
+            keyElement.textContent = key.note;
+            keyElement.addEventListener('click', () => playNote(key.freq, key.note));
+            keyElement.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                playNote(key.freq, key.note);
+            });
+            piano.appendChild(keyElement);
+        });
+    }
+
+    // Play a single note
+    function playNote(frequency, noteName, showVisualFeedback = true) {
+        if (!audioContext) return;
+
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        oscillator.frequency.value = frequency;
+        oscillator.type = 'triangle';
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+
+        // Visual feedback
+        if (showVisualFeedback) {
+           const keyElement = Array.from(document.querySelectorAll('.piano-key')).find(el =>
+               el.textContent === noteName
+           );
+           if (keyElement) {
+               keyElement.classList.add('playing');
+               setTimeout(() => keyElement.classList.remove('playing'), 150);
+           }
+       }
+
+        // Record note if recording
+        if (isRecording) {
+            recordedNotes.push({ note: noteName, freq: frequency, time: Date.now() });
+        }
+    }
+
+    // Play the current melody
+    async function playMelody() {
+        const melody = melodies[currentLevel - 1];
+        const playBtn = document.getElementById('playBtn');
+        const status = document.getElementById('status');
+
+        playBtn.disabled = true;
+        status.textContent = 'Listen carefully...';
+
+        for (let i = 0; i < melody.length; i++) {
+            const { note, freq, duration } = melody[i];
+
+            // Highlight note if simplification is enabled
+            if (simplificationEnabled) {
+                const keyElement = Array.from(document.querySelectorAll('.piano-key')).find(el =>
+                    el.textContent === note
+                );
+                if (keyElement) {
+                    keyElement.classList.add('highlight');
+                    setTimeout(() => keyElement.classList.remove('highlight'), duration);
+                }
+                status.textContent = `Playing: ${note}`;
+            }
+
+            playNote(freq, note, false);
+            await new Promise(resolve => setTimeout(resolve, duration + 100));
+        }
+
+        playBtn.disabled = false;
+        status.textContent = 'Now try to play it back!';
+    }
+
+    // Toggle recording
+    function toggleRecording() {
+        const recordBtn = document.getElementById('recordBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const status = document.getElementById('status');
+
+        if (!isRecording) {
+            isRecording = true;
+            recordedNotes = [];
+            recordBtn.textContent = '⏹️ Stop';
+            recordBtn.classList.add('recording');
+            status.textContent = '🔴 Recording... Play the melody!';
+            status.classList.add('recording');
+            submitBtn.disabled = true;
+        } else {
+            isRecording = false;
+            recordBtn.textContent = '🎤 Record';
+            recordBtn.classList.remove('recording');
+            status.textContent = `Recorded ${recordedNotes.length} notes. Click Submit!`;
+            status.classList.remove('recording');
+            submitBtn.disabled = recordedNotes.length === 0;
+        }
+    }
+
+    // Submit recording and check if correct
+    function submitRecording() {
+        const melody = melodies[currentLevel - 1];
+        const status = document.getElementById('status');
+
+        if (recordedNotes.length !== melody.length) {
+            status.textContent = `Try again! You need ${melody.length} notes.`;
+            return;
+        }
+
+        // Check if the sequence matches
+        let correct = true;
+        for (let i = 0; i < melody.length; i++) {
+            if (recordedNotes[i].note !== melody[i].note) {
+                correct = false;
+                break;
+            }
+        }
+
+        if (correct) {
+            showSuccessModal();
+        } else {
+            status.textContent = 'Not quite right. Try again!';
+            recordedNotes = [];
+            document.getElementById('submitBtn').disabled = true;
+        }
+    }
+
+    // Show success modal
+    function showSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const message = document.getElementById('modalMessage');
+
+        if (currentLevel === 3) {
+            message.textContent = 'Congratulations! You completed all levels!';
+        } else {
+            message.textContent = `Level ${currentLevel} complete! Ready for the next challenge?`;
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    // Proceed to next level
+    function nextLevel() {
+        const modal = document.getElementById('successModal');
+        modal.style.display = 'none';
+
+        if (currentLevel < 3) {
+            currentLevel++;
+            document.getElementById('currentLevel').textContent = currentLevel;
+            updateProgress();
+            resetRecording();
+            document.getElementById('status').textContent = 'Click "Play Melody" to hear the new tune!';
+        } else {
+            // Game complete
+            currentLevel = 1;
+            document.getElementById('currentLevel').textContent = currentLevel;
+            updateProgress();
+            resetRecording();
+            document.getElementById('status').textContent = 'Game complete! Starting over...';
+        }
+    }
+
+    // Reset recording state
+    function resetRecording() {
+        isRecording = false;
+        recordedNotes = [];
+        const recordBtn = document.getElementById('recordBtn');
+        const submitBtn = document.getElementById('submitBtn');
+
+        recordBtn.textContent = '🎤 Record';
+        recordBtn.classList.remove('recording');
+        submitBtn.disabled = true;
+    }
+
+    // Update progress bar
+    function updateProgress() {
+        const progress = ((currentLevel - 1) / 3) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    // Toggle settings panel
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Toggle simplification mode
+    function toggleSimplification() {
+        simplificationEnabled = document.getElementById('simplificationMode').checked;
+    }
+
+    // Close settings when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.settings')) {
+            document.getElementById('settingsPanel').style.display = 'none';
+        }
+    });
+
+    // Handle mobile touch events
+    document.addEventListener('touchstart', function() {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+    });
+
+    // Initialize game when page loads
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>

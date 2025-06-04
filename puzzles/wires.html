@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wire Connection Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            color: white;
+        }
+
+        .game-container {
+            max-width: 100%;
+            width: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .level-info {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-check {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(45deg, #ff9800, #ffb74d);
+            color: white;
+        }
+
+        .btn-hint {
+            background: linear-gradient(45deg, #9c27b0, #ba68c8);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .grid {
+            display: grid;
+            gap: 4px;
+            margin: 20px auto;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            justify-content: center;
+        }
+
+        .grid-3x3 { grid-template-columns: repeat(3, 60px); }
+        .grid-4x4 { grid-template-columns: repeat(4, 55px); }
+        .grid-5x5 { grid-template-columns: repeat(5, 50px); }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: #2a2a2a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cell:hover {
+            transform: scale(1.05);
+            border-color: #666;
+        }
+
+        .cell.start {
+            background: linear-gradient(45deg, #4CAF50, #8BC34A);
+            border-color: #4CAF50;
+        }
+
+        .cell.end {
+            background: linear-gradient(45deg, #f44336, #e91e63);
+            border-color: #f44336;
+        }
+
+        .cell.connected {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            border-color: #FFD700;
+            animation: glow 1s ease-in-out infinite alternate;
+        }
+
+        .cell.solution-hint {
+            border-color: #FFD700 !important;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+            to { box-shadow: 0 0 20px rgba(255, 215, 0, 0.8); }
+        }
+
+        .wire {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.3s ease;
+        }
+
+        /* Wire segments - using CSS borders to draw pipes */
+        .wire-straight-h::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: #888;
+            transform: translateY(-50%);
+            border-radius: 4px;
+        }
+
+        .wire-straight-v::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 8px;
+            background: #888;
+            transform: translateX(-50%);
+            border-radius: 4px;
+        }
+
+        .wire-corner-tl::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 50%;
+            height: 8px;
+            background: #888;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .wire-corner-tl::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 8px;
+            height: 50%;
+            background: #888;
+            transform: translateX(-50%);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .wire-corner-tr::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 50%;
+            height: 8px;
+            background: #888;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .wire-corner-tr::after {
+            content: '';
+            position: absolute;
+            right: 50%;
+            top: 0;
+            width: 8px;
+            height: 50%;
+            background: #888;
+            transform: translateX(50%);
+            border-radius: 4px 4px 0 0;
+        }
+
+        .wire-corner-bl::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 50%;
+            width: 50%;
+            height: 8px;
+            background: #888;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .wire-corner-bl::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            width: 8px;
+            height: 50%;
+            background: #888;
+            transform: translateX(-50%);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .wire-corner-br::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 50%;
+            width: 50%;
+            height: 8px;
+            background: #888;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .wire-corner-br::after {
+            content: '';
+            position: absolute;
+            right: 50%;
+            bottom: 0;
+            width: 8px;
+            height: 50%;
+            background: #888;
+            transform: translateX(50%);
+            border-radius: 0 0 4px 4px;
+        }
+
+        /* Connected wire segments glow */
+        .cell.connected .wire-straight-h::before,
+        .cell.connected .wire-straight-v::before,
+        .cell.connected .wire-corner-tl::before,
+        .cell.connected .wire-corner-tl::after,
+        .cell.connected .wire-corner-tr::before,
+        .cell.connected .wire-corner-tr::after,
+        .cell.connected .wire-corner-bl::before,
+        .cell.connected .wire-corner-bl::after,
+        .cell.connected .wire-corner-br::before,
+        .cell.connected .wire-corner-br::after {
+            background: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+        }
+
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.1em;
+            min-height: 1.5em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .modal p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .settings {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2em;
+        }
+
+        .settings-panel {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            min-width: 200px;
+            color: #333;
+        }
+
+        .settings-panel label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .hint-highlight {
+            animation: hint-pulse 2s ease-in-out 3;
+        }
+
+        @keyframes hint-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); border-color: #FFD700; }
+        }
+
+        @media (max-width: 600px) {
+            .grid-3x3 { grid-template-columns: repeat(3, 55px); }
+            .grid-4x4 { grid-template-columns: repeat(4, 50px); }
+            .grid-5x5 { grid-template-columns: repeat(5, 45px); }
+
+            .cell {
+                width: 55px;
+                height: 55px;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+
+            .controls {
+                gap: 5px;
+            }
+
+            .btn {
+                padding: 10px 15px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="settings">
+    <button class="settings-btn" onclick="toggleSettings()">⚙️</button>
+    <div class="settings-panel" id="settingsPanel">
+        <label>
+            <input type="checkbox" id="simplificationMode" onchange="toggleSimplification()">
+            Show connection hints
+        </label>
+    </div>
+</div>
+
+<div class="game-container">
+    <div class="header">
+        <h1 class="title">🔌 Wire Puzzle</h1>
+        <div class="level-info">Level <span id="currentLevel">1</span> of 3</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn btn-check" onclick="checkConnection()" id="checkBtn">⚡ Check Connection</button>
+        <button class="btn btn-reset" onclick="resetLevel()" id="resetBtn">🔄 Reset</button>
+        <button class="btn btn-hint" onclick="showHint()" id="hintBtn">💡 Hint</button>
+    </div>
+
+    <div class="status" id="status">Rotate the wire pieces to connect the green start to the red end!</div>
+
+    <div class="grid" id="grid"></div>
+</div>
+
+<div class="modal" id="successModal">
+    <div class="modal-content">
+        <h2>⚡ Circuit Complete!</h2>
+        <p id="modalMessage">You successfully connected the wire!</p>
+        <button class="btn btn-check" onclick="nextLevel()">Continue</button>
+    </div>
+</div>
+
+<script>
+    // Game configuration
+    const SIMPLIFICATION_MODE = false; // Set to true to enable connection hints
+
+    // Level configurations
+    const levels = [
+        // Level 1: 3x3 simple path
+        {
+            size: 3,
+            start: [0, 0],
+            end: [2, 2],
+            wires: [
+                { pos: [0, 1], type: 'straight-v', rotation: 0, isSolution: false },
+                { pos: [0, 2], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [1, 0], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [1, 1], type: 'corner-tl', rotation: 0, isSolution: true },
+                { pos: [1, 2], type: 'straight-v', rotation: 0, isSolution: false },
+                { pos: [2, 0], type: 'corner-tr', rotation: 0, isSolution: false },
+                { pos: [2, 1], type: 'straight-v', rotation: 0, isSolution: true },
+            ]
+        },
+        // Level 2: 4x4 medium complexity
+        {
+            size: 4,
+            start: [0, 1],
+            end: [3, 2],
+            wires: [
+                { pos: [0, 2], type: 'straight-v', rotation: 0 },
+                { pos: [1, 2], type: 'corner-tr', rotation: 0 },
+                { pos: [1, 1], type: 'straight-h', rotation: 0 },
+                { pos: [2, 1], type: 'corner-bl', rotation: 0 },
+                { pos: [2, 2], type: 'straight-h', rotation: 0 },
+                { pos: [3, 1], type: 'straight-v', rotation: 0 }
+            ]
+        },
+        // Level 3: 5x5 complex path
+        {
+            size: 5,
+            start: [0, 2],
+            end: [4, 2],
+            wires: [
+                { pos: [1, 2], type: 'corner-tr', rotation: 0 },
+                { pos: [1, 1], type: 'corner-bl', rotation: 0 },
+                { pos: [2, 1], type: 'straight-h', rotation: 0 },
+                { pos: [3, 1], type: 'corner-br', rotation: 0 },
+                { pos: [3, 2], type: 'straight-h', rotation: 0 },
+                { pos: [2, 3], type: 'straight-v', rotation: 0 },
+                { pos: [1, 3], type: 'corner-tl', rotation: 0 }
+            ]
+        }
+    ];
+
+    // Wire type definitions (connections)
+    const wireTypes = {
+        'straight-h': { connections: ['left', 'right'] },
+        'straight-v': { connections: ['top', 'bottom'] },
+        'corner-tl': { connections: ['top', 'right'] },
+        'corner-tr': { connections: ['top', 'left'] },
+        'corner-bl': { connections: ['bottom', 'right'] },
+        'corner-br': { connections: ['bottom', 'left'] }
+    };
+
+    // Game state
+    let currentLevel = 1;
+    let grid = [];
+    let simplificationEnabled = SIMPLIFICATION_MODE;
+
+    // Initialize the game
+    function init() {
+        updateProgress();
+        setupLevel();
+        document.getElementById('simplificationMode').checked = simplificationEnabled;
+    }
+
+    // Setup current level
+    function setupLevel() {
+        const level = levels[currentLevel - 1];
+        createGrid(level);
+    }
+
+    // Create grid for current level
+    function createGrid(level) {
+        const gridElement = document.getElementById('grid');
+        gridElement.className = `grid grid-${level.size}x${level.size}`;
+        gridElement.innerHTML = '';
+
+        // Initialize grid data
+        grid = Array(level.size).fill().map(() => Array(level.size).fill(null));
+
+        // Create cells
+        for (let row = 0; row < level.size; row++) {
+            for (let col = 0; col < level.size; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+
+                // Check if start or end position
+                if (row === level.start[0] && col === level.start[1]) {
+                    cell.classList.add('start');
+                    cell.textContent = '🟢';
+                } else if (row === level.end[0] && col === level.end[1]) {
+                    cell.classList.add('end');
+                    cell.textContent = '🔴';
+                }
+
+                cell.addEventListener('click', () => rotateWire(row, col));
+                gridElement.appendChild(cell);
+            }
+        }
+
+        // Place wires with random rotations
+        level.wires.forEach(wire => {
+            const [row, col] = wire.pos;
+            const randomRotation = Math.floor(Math.random() * 4);
+            placeWire(row, col, wire.type, randomRotation, wire.isSolution);
+        });
+    }
+
+    // Place a wire piece
+    function placeWire(row, col, type, rotation, isSolution = false) {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        if (!cell) return;
+
+        const wire = document.createElement('div');
+        wire.className = `wire wire-${type}`;
+        wire.style.transform = `rotate(${rotation * 90}deg)`;
+
+        cell.innerHTML = '';
+        cell.appendChild(wire);
+
+        // Add solution data to cell
+        cell.dataset.isSolution = isSolution;
+
+        grid[row][col] = { type, rotation, isSolution };
+    }
+
+    // Rotate wire on click
+    function rotateWire(row, col) {
+        if (!grid[row][col]) return;
+
+        const wireData = grid[row][col];
+        wireData.rotation = (wireData.rotation + 1) % 4;
+
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        const wire = cell.querySelector('.wire');
+        if (wire) {
+            wire.style.transform = `rotate(${wireData.rotation * 90}deg)`;
+        }
+
+        // Auto-check if simplification is enabled
+        if (simplificationEnabled) {
+            setTimeout(() => checkConnection(false), 100);
+        }
+    }
+
+    // Check if path is connected
+    function checkConnection(showResult = true) {
+        const level = levels[currentLevel - 1];
+        clearHighlights();
+
+        const path = findPath(level.start, level.end);
+
+        if (path.length > 0) {
+            // Highlight connected path
+            path.forEach(([row, col]) => {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (cell) cell.classList.add('connected');
+            });
+
+            if (showResult) {
+                document.getElementById('status').textContent = '⚡ Connection successful!';
+                setTimeout(showSuccessModal, 500);
+            }
+        } else {
+            if (showResult) {
+                document.getElementById('status').textContent = 'No connection found. Keep trying!';
+                setTimeout(() => {
+                    document.getElementById('status').textContent = 'Rotate the wire pieces to connect the green start to the red end!';
+                }, 2000);
+            }
+        }
+    }
+
+    // Find path using BFS
+    function findPath(start, end) {
+        const level = levels[currentLevel - 1];
+        const visited = Array(level.size).fill().map(() => Array(level.size).fill(false));
+        const queue = [[start, [start]]];
+        const directions = {
+            'top': [-1, 0],
+            'bottom': [1, 0],
+            'left': [0, -1],
+            'right': [0, 1]
+        };
+        const opposites = {
+            'top': 'bottom',
+            'bottom': 'top',
+            'left': 'right',
+            'right': 'left'
+        };
+
+        while (queue.length > 0) {
+            const [[row, col], path] = queue.shift();
+
+            if (row === end[0] && col === end[1]) {
+                return path;
+            }
+
+            if (visited[row][col]) continue;
+            visited[row][col] = true;
+
+            // Get connections for current cell
+            let connections = [];
+            if (row === start[0] && col === start[1]) {
+                connections = ['top', 'bottom', 'left', 'right']; // Start can connect anywhere
+            } else if (grid[row][col]) {
+                const wireData = grid[row][col];
+                const baseConnections = wireTypes[wireData.type].connections;
+                connections = rotateConnections(baseConnections, wireData.rotation);
+            }
+
+            // Try each direction
+            connections.forEach(direction => {
+                const [dr, dc] = directions[direction];
+                const newRow = row + dr;
+                const newCol = col + dc;
+
+                if (newRow >= 0 && newRow < level.size &&
+                    newCol >= 0 && newCol < level.size &&
+                    !visited[newRow][newCol]) {
+
+                    // Check if target cell can connect back
+                    let canConnect = false;
+
+                    if (newRow === end[0] && newCol === end[1]) {
+                        canConnect = true; // End point accepts any connection
+                    } else if (grid[newRow][newCol]) {
+                        const targetWire = grid[newRow][newCol];
+                        const targetConnections = rotateConnections(
+                            wireTypes[targetWire.type].connections,
+                            targetWire.rotation
+                        );
+                        canConnect = targetConnections.includes(opposites[direction]);
+                    }
+
+                    if (canConnect) {
+                        queue.push([[newRow, newCol], [...path, [newRow, newCol]]]);
+                    }
+                }
+            });
+        }
+
+        return [];
+    }
+
+    // Rotate connections based on wire rotation
+    function rotateConnections(connections, rotation) {
+        const directionMap = ['top', 'right', 'bottom', 'left'];
+        return connections.map(dir => {
+            const index = directionMap.indexOf(dir);
+            return directionMap[(index + rotation) % 4];
+        });
+    }
+
+    // Clear all highlights
+    function clearHighlights() {
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.classList.remove('connected', 'hint-highlight', 'solution-hint');
+        });
+    }
+
+    // Show hint
+    function showHint() {
+        if (!simplificationEnabled) {
+            // Find one incorrectly rotated piece and highlight it
+            const level = levels[currentLevel - 1];
+            const path = findPath(level.start, level.end);
+
+            if (path.length === 0) {
+                // Find first wire piece that's not correctly oriented
+                for (let wire of level.wires) {
+                    const [row, col] = wire.pos;
+                    const currentWire = grid[row][col];
+                    if (currentWire && currentWire.rotation !== wire.rotation) {
+                        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                        if (cell) {
+                            cell.classList.add('hint-highlight');
+                            setTimeout(() => cell.classList.remove('hint-highlight'), 6000);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Reset current level
+    function resetLevel() {
+        clearHighlights();
+        setupLevel();
+        document.getElementById('status').textContent = 'Rotate the wire pieces to connect the green start to the red end!';
+    }
+
+    // Show success modal
+    function showSuccessModal() {
+        const modal = document.getElementById('successModal');
+        const message = document.getElementById('modalMessage');
+
+        if (currentLevel === 3) {
+            message.textContent = 'Congratulations! You completed all wire puzzles!';
+        } else {
+            message.textContent = `Level ${currentLevel} complete! Ready for a bigger challenge?`;
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    // Proceed to next level
+    function nextLevel() {
+        const modal = document.getElementById('successModal');
+        modal.style.display = 'none';
+
+        if (currentLevel < 3) {
+            currentLevel++;
+            document.getElementById('currentLevel').textContent = currentLevel;
+            updateProgress();
+            setupLevel();
+            document.getElementById('status').textContent = 'New level! Connect the circuit!';
+        } else {
+            // Game complete - restart
+            currentLevel = 1;
+            document.getElementById('currentLevel').textContent = currentLevel;
+            updateProgress();
+            setupLevel();
+            document.getElementById('status').textContent = 'All levels complete! Starting over...';
+        }
+    }
+
+    // Update progress bar
+    function updateProgress() {
+        const progress = ((currentLevel - 1) / 3) * 100;
+        document.getElementById('progressFill').style.width = progress + '%';
+    }
+
+    // Toggle settings panel
+    function toggleSettings() {
+        const panel = document.getElementById('settingsPanel');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Toggle simplification mode
+    function toggleSimplification() {
+        simplificationEnabled = document.getElementById('simplificationMode').checked;
+        if (simplificationEnabled) {
+            checkConnection(false); // Auto-highlight current connections
+            highlightSolutionCells();
+        } else {
+            clearHighlights();
+            clearSolutionHighlights();
+        }
+    }
+
+    // Highlight solution cells
+    function highlightSolutionCells() {
+        document.querySelectorAll('.cell').forEach(cell => {
+            if (cell.dataset.isSolution === 'true') {
+                cell.classList.add('solution-hint');
+            }
+        });
+    }
+
+    // Clear solution highlights
+    function clearSolutionHighlights() {
+        document.querySelectorAll('.cell').forEach(cell => {
+            cell.classList.remove('solution-hint');
+        });
+    }
+
+    // Close settings when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.settings')) {
+            document.getElementById('settingsPanel').style.display = 'none';
+        }
+    });
+
+    // Initialize game when page loads
+    window.addEventListener('load', init);
+</script>
+</body>
+</html>
