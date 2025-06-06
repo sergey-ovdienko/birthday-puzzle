@@ -339,9 +339,9 @@
             };
 
             this.levelConfig = [
-                { size: 4, targets: 2, reds: 1, time: 1500 },
-                { size: 5, targets: 3, reds: 2, time: 1500 },
-                { size: 6, targets: 4, reds: 3, time: 1500 }
+                { size: 4, targets: 2, reds: 1, time: 2000 },
+                { size: 5, targets: 3, reds: 2, time: 2000 },
+                { size: 6, targets: 4, reds: 3, time: 2000 }
             ];
 
             this.initEventListeners();
@@ -414,7 +414,8 @@
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.dataset.index = i;
-                cell.addEventListener('click', () => this.handleCellClick(i));
+                cell.addEventListener('mousedown', () => this.handleCellClick(i));
+                cell.addEventListener('touchstart', () => this.handleCellClick(i));
                 board.appendChild(cell);
             }
         }
@@ -609,22 +610,6 @@
     document.addEventListener('DOMContentLoaded', () => {
         new SpeedTapGame();
     });
-
-    // Prevent zoom on mobile devices
-    document.addEventListener('touchstart', function(event) {
-        if (event.touches.length > 1) {
-            event.preventDefault();
-        }
-    }, { passive: false });
-
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function(event) {
-        const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 20) {
-            event.preventDefault();
-        }
-        lastTouchEnd = now;
-    }, false);
 </script>
 </body>
 </html>
