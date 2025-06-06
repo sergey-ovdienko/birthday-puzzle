@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -233,6 +233,7 @@
         }
 
         .settings {
+            display: none;
             position: absolute;
             top: 10px;
             right: 10px;
@@ -308,7 +309,7 @@
 
 <div class="game-container">
     <div class="header">
-        <h1 class="title">🎹 Piano Puzzle</h1>
+        <h1 class="title">🎵 Piano Puzzle</h1>
         <div class="level-info">Level <span id="currentLevel">1</span> of 3</div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
@@ -336,7 +337,7 @@
 
 <script>
     // Game configuration
-    const SIMPLIFICATION_MODE = false; // Set to true to enable note highlighting
+    const SIMPLIFICATION_MODE = localStorage.getItem('assignedRole') === 'Musician'; // Set to true to enable note highlighting
 
     // Melodies for each level (note frequencies)
     const melodies = [
@@ -580,7 +581,7 @@
             document.getElementById('currentLevel').textContent = currentLevel;
             updateProgress();
             resetRecording();
-            document.getElementById('status').textContent = 'Game complete! Starting over...';
+            document.getElementById('status').textContent = 'Game complete! Your code is: ZYXVUT';
         }
     }
 

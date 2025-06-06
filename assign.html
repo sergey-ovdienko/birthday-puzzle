@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Role Assignment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .role-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            transform: translateY(0);
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .role-emoji {
+            font-size: 120px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-15px);
+            }
+            60% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .role-title {
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .role-subtitle {
+            color: #4a5568;
+            font-size: 18px;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .role-description {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(237, 242, 247, 0.7);
+            border-radius: 15px;
+            border-left: 4px solid #4299e1;
+        }
+
+        .status-message {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        .error-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .error-title {
+            color: #e53e3e;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            color: #718096;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .valid-roles {
+            background: rgba(237, 242, 247, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .valid-roles h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .role-example {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .role-example-emoji {
+            font-size: 24px;
+            margin-right: 12px;
+        }
+
+        .role-example-text {
+            color: #4a5568;
+            font-weight: bold;
+        }
+
+        @media (max-width: 480px) {
+            .role-container, .error-container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+
+            .role-emoji {
+                font-size: 80px;
+            }
+
+            .role-title {
+                font-size: 24px;
+            }
+
+            .role-subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="content-container">
+    <!-- Content will be dynamically inserted here -->
+</div>
+
+<script>
+    class RoleAssignment {
+        constructor() {
+            this.roles = {
+                'Engineer': {
+                    emoji: '🔧',
+                    description: 'Master of building and fixing things. Your technical skills and problem-solving abilities make you essential for any complex challenge.'
+                },
+                'Spy': {
+                    emoji: '🕵️',
+                    description: 'Master of stealth and intelligence gathering. Your ability to move unseen and collect crucial information is unmatched.'
+                },
+                'Musician': {
+                    emoji: '🎵',
+                    description: 'Master of rhythm and melody. Your musical talents can inspire, communicate, and create harmony in any situation.'
+                },
+                'Photographer': {
+                    emoji: '📸',
+                    description: 'Master of capturing moments and details. Your keen eye for visual storytelling reveals what others might miss.'
+                },
+                'Speedster': {
+                    emoji: '⚡',
+                    description: 'Master of lightning-fast reactions. Your incredible speed and quick reflexes make you unstoppable in fast-paced situations.'
+                }
+            };
+
+            this.init();
+        }
+
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const role = urlParams.get('role');
+
+            if (role && this.roles[role]) {
+                this.displayRole(role);
+                this.saveToLocalStorage(role);
+            } else {
+                this.displayError(role);
+            }
+        }
+
+        displayRole(role) {
+            const roleData = this.roles[role];
+            const container = document.getElementById('content-container');
+
+            container.innerHTML = `
+                    <div class="role-container">
+                        <div class="role-emoji">${roleData.emoji}</div>
+                        <h1 class="role-title">${role}</h1>
+                        <p class="role-subtitle">Your assigned role</p>
+                        <div class="role-description">
+                            ${roleData.description}
+                        </div>
+                        <div class="status-message">
+                            ✅ Role saved successfully!
+                        </div>
+                    </div>
+                `;
+        }
+
+        displayError(invalidRole) {
+            const container = document.getElementById('content-container');
+
+            container.innerHTML = `
+                    <div class="error-container">
+                        <div class="error-emoji">❌</div>
+                        <h1 class="error-title">Invalid Role</h1>
+                        <p class="error-message">
+                            ${invalidRole ? `"${invalidRole}" is not a valid role.` : 'No role parameter provided.'}
+                            <br><br>
+                            Please use one of the following valid roles in the URL parameter:
+                        </p>
+                        <div class="valid-roles">
+                            <h3>Valid Roles:</h3>
+                            ${Object.entries(this.roles).map(([role, data]) => `
+                                <div class="role-example">
+                                    <span class="role-example-emoji">${data.emoji}</span>
+                                    <span class="role-example-text">${role}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="error-message" style="margin-top: 20px; font-size: 14px;">
+                            <strong>Example:</strong><br>
+                            <code>?role=Engineer</code> or <code>?role=Speedster</code>
+                        </p>
+                    </div>
+                `;
+        }
+
+        saveToLocalStorage(role) {
+            try {
+                localStorage.setItem('assignedRole', role);
+                localStorage.setItem('roleAssignedAt', new Date().toISOString());
+                console.log(`Role "${role}" saved to localStorage`);
+            } catch (error) {
+                console.warn('Could not save to localStorage:', error);
+            }
+        }
+    }
+
+    // Initialize the role assignment when the page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        new RoleAssignment();
+    });
+</script>
+</body>
+</html>

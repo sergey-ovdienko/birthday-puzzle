@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
@@ -103,6 +103,7 @@
         }
 
         .btn-hint {
+            display: none;
             background: linear-gradient(45deg, #9c27b0, #ba68c8);
             color: white;
         }
@@ -354,6 +355,7 @@
         }
 
         .settings {
+            display: none;
             position: absolute;
             top: 10px;
             right: 10px;
@@ -436,7 +438,7 @@
 
 <div class="game-container">
     <div class="header">
-        <h1 class="title">🔌 Wire Puzzle</h1>
+        <h1 class="title">🔧 Wire Puzzle</h1>
         <div class="level-info">Level <span id="currentLevel">1</span> of 3</div>
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
@@ -464,7 +466,7 @@
 
 <script>
     // Game configuration
-    const SIMPLIFICATION_MODE = false; // Set to true to enable connection hints
+    const SIMPLIFICATION_MODE = localStorage.getItem('assignedRole') === 'Engineer'; // Set to true to enable connection hints
 
     // Level configurations
     const levels = [
@@ -474,13 +476,13 @@
             start: [0, 0],
             end: [2, 2],
             wires: [
-                { pos: [0, 1], type: 'straight-v', rotation: 0, isSolution: false },
-                { pos: [0, 2], type: 'corner-tl', rotation: 0, isSolution: false },
-                { pos: [1, 0], type: 'straight-h', rotation: 0, isSolution: true },
-                { pos: [1, 1], type: 'corner-tl', rotation: 0, isSolution: true },
-                { pos: [1, 2], type: 'straight-v', rotation: 0, isSolution: false },
-                { pos: [2, 0], type: 'corner-tr', rotation: 0, isSolution: false },
-                { pos: [2, 1], type: 'straight-v', rotation: 0, isSolution: true },
+                { pos: [0, 1], type: 'corner-bl', rotation: 0, isSolution: true },
+                { pos: [0, 2], type: 'straight-h', rotation: 0, isSolution: false },
+                { pos: [1, 0], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [1, 1], type: 'straight-v', rotation: 0, isSolution: true },
+                { pos: [1, 2], type: 'straight-h', rotation: 0, isSolution: false },
+                { pos: [2, 0], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [2, 1], type: 'corner-tr', rotation: 0, isSolution: true },
             ]
         },
         // Level 2: 4x4 medium complexity
@@ -489,12 +491,23 @@
             start: [0, 1],
             end: [3, 2],
             wires: [
-                { pos: [0, 2], type: 'straight-v', rotation: 0 },
-                { pos: [1, 2], type: 'corner-tr', rotation: 0 },
-                { pos: [1, 1], type: 'straight-h', rotation: 0 },
-                { pos: [2, 1], type: 'corner-bl', rotation: 0 },
-                { pos: [2, 2], type: 'straight-h', rotation: 0 },
-                { pos: [3, 1], type: 'straight-v', rotation: 0 }
+                { pos: [0, 0], type: 'straight-v', rotation: 0, isSolution: false },
+                { pos: [0, 2], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [0, 3], type: 'corner-bl', rotation: 0, isSolution: true },
+
+                { pos: [1, 0], type: 'corner-tr', rotation: 0, isSolution: false },
+                { pos: [1, 1], type: 'straight-h', rotation: 0, isSolution: false },
+                { pos: [1, 2], type: 'corner-tr', rotation: 0, isSolution: false },
+                { pos: [1, 3], type: 'straight-h', rotation: 0, isSolution: true },
+
+                { pos: [2, 0], type: 'corner-br', rotation: 0, isSolution: true },
+                { pos: [2, 1], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [2, 2], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [2, 3], type: 'corner-tl', rotation: 0, isSolution: true },
+
+                { pos: [3, 0], type: 'corner-tr', rotation: 0, isSolution: true },
+                { pos: [3, 1], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [3, 3], type: 'corner-tr', rotation: 0, isSolution: false }
             ]
         },
         // Level 3: 5x5 complex path
@@ -503,13 +516,33 @@
             start: [0, 2],
             end: [4, 2],
             wires: [
-                { pos: [1, 2], type: 'corner-tr', rotation: 0 },
-                { pos: [1, 1], type: 'corner-bl', rotation: 0 },
-                { pos: [2, 1], type: 'straight-h', rotation: 0 },
-                { pos: [3, 1], type: 'corner-br', rotation: 0 },
-                { pos: [3, 2], type: 'straight-h', rotation: 0 },
-                { pos: [2, 3], type: 'straight-v', rotation: 0 },
-                { pos: [1, 3], type: 'corner-tl', rotation: 0 }
+                { pos: [0, 0], type: 'corner-br', rotation: 0, isSolution: true },
+                { pos: [0, 1], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [0, 3], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [0, 4], type: 'straight-v', rotation: 0, isSolution: false },
+
+                { pos: [1, 0], type: 'straight-v', rotation: 0, isSolution: true },
+                { pos: [1, 1], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [1, 2], type: 'corner-br', rotation: 0, isSolution: true },
+                { pos: [1, 3], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [1, 4], type: 'corner-bl', rotation: 0, isSolution: true },
+
+                { pos: [2, 0], type: 'corner-tr', rotation: 0, isSolution: true },
+                { pos: [2, 1], type: 'straight-h', rotation: 0, isSolution: true },
+                { pos: [2, 2], type: 'corner-tl', rotation: 0, isSolution: true },
+                { pos: [2, 3], type: 'straight-h', rotation: 0, isSolution: false },
+                { pos: [2, 4], type: 'straight-v', rotation: 0, isSolution: true },
+
+                { pos: [3, 0], type: 'straight-v', rotation: 0, isSolution: false },
+                { pos: [3, 1], type: 'straight-h', rotation: 0, isSolution: false },
+                { pos: [3, 2], type: 'corner-bl', rotation: 0, isSolution: false },
+                { pos: [3, 3], type: 'corner-br', rotation: 0, isSolution: true },
+                { pos: [3, 4], type: 'corner-tl', rotation: 0, isSolution: true },
+
+                { pos: [4, 0], type: 'corner-tl', rotation: 0, isSolution: false },
+                { pos: [4, 1], type: 'straight-v', rotation: 0, isSolution: false },
+                { pos: [4, 3], type: 'corner-tl', rotation: 0, isSolution: true },
+                { pos: [4, 4], type: 'straight-h', rotation: 0, isSolution: false },
             ]
         }
     ];
@@ -540,6 +573,12 @@
     function setupLevel() {
         const level = levels[currentLevel - 1];
         createGrid(level);
+        if (simplificationEnabled) {
+            highlightSolutionCells();
+            setTimeout(() => {
+                clearSolutionHighlights();
+            }, 3000);
+        }
     }
 
     // Create grid for current level
@@ -797,7 +836,7 @@
             document.getElementById('currentLevel').textContent = currentLevel;
             updateProgress();
             setupLevel();
-            document.getElementById('status').textContent = 'All levels complete! Starting over...';
+            document.getElementById('status').textContent = 'All levels complete! Your code is: QWERTY';
         }
     }
 

@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
+            font-family: 'Arial', sans-serif;
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
             min-height: 100vh;
             padding: 10px;
@@ -305,7 +305,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>🧩 Kids Jigsaw Puzzle</h1>
+    <h1>📸 Kids Jigsaw Puzzle</h1>
     <div class="level-indicator" id="levelIndicator">Level 1: Easy (12 pieces)</div>
 
     <div class="game-controls">
@@ -375,6 +375,10 @@
         1: './img/jig1.png',
         2: './img/jig2.png',
         3: './img/jig3.png'
+    }
+
+    if (localStorage.getItem('assignedRole') !== 'Photographer') {
+        document.querySelector('#referenceBtn').style.display = 'none';
     }
 
     // Initialize game
@@ -549,9 +553,9 @@
     function levelComplete() {
         if (gameState.currentLevel === gameState.maxLevel) {
             // All levels complete
-            updateMessage("🎉 Amazing! You've completed all levels!", "success");
+            updateMessage("🎉 Amazing! You've completed all levels! Your code is: LKJHGF", "success");
             setTimeout(() => {
-                showSuccessModal();
+                // showSuccessModal();
             }, 1500);
         } else {
             // Move to next level

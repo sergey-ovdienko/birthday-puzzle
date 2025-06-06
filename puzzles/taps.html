@@ -68,6 +68,7 @@
         }
 
         .mode-toggle {
+            display: none;
             background: linear-gradient(45deg, #667eea, #764ba2);
             color: white;
             border: none;
@@ -321,11 +322,7 @@
         <button class="btn btn-primary" id="start-btn">START</button>
         <button class="btn btn-secondary" id="reset-btn">Reset</button>
         <button class="btn btn-primary" id="next-level-btn" style="display: none;">Next Level</button>
-        <button class="btn btn-danger" id="prev-level-btn">Prev Level</button>
-    </div>
-
-    <div class="instructions">
-        Tap the GREEN cells quickly! Avoid RED cells in Regular Mode. Complete 5 rounds to advance!
+        <button class="btn btn-danger" style="display: none" id="prev-level-btn">Prev Level</button>
     </div>
 </div>
 
@@ -333,7 +330,7 @@
     class SpeedTapGame {
         constructor() {
             this.currentLevel = 1;
-            this.isRegularMode = true;
+            this.isRegularMode = localStorage.getItem('assignedRole') !== 'Speedster';
             this.gameState = {
                 isPlaying: false,
                 score: 0,
@@ -583,7 +580,7 @@
             if (this.currentLevel < this.levelConfig.length) {
                 document.getElementById('next-level-btn').style.display = 'inline-block';
             } else {
-                this.showMessage('🏆 Congratulations! You completed all levels!', 'success');
+                this.showMessage('🏆 Congratulations! You completed all levels! Your code is: POIUYT', 'success');
             }
 
             this.clearBoard();
@@ -629,7 +626,7 @@
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function(event) {
         const now = (new Date()).getTime();
-        if (now - lastTouchEnd <= 300) {
+        if (now - lastTouchEnd <= 20) {
             event.preventDefault();
         }
         lastTouchEnd = now;
